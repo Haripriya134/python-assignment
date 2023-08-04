@@ -203,6 +203,7 @@ def books():
     cur.close()
 
 
+
 # View Details of Book by ID
 @app.route('/book/<string:id>')
 def viewBook(id):
