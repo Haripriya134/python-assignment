@@ -148,3 +148,78 @@ def edit_member(id):
     # To render edit member form
     return render_template('edit_member.html', form=form, member=member)
 
+# Delete Member by ID
+# Using POST instead of DELETE because HTML form can only send GET and POST requests
+@app.route('/delete_member/<string:id>', methods=['POST'])
+def delete_member(id):
+
+    # Create MySQLCursor
+    cur = mysql.connection.cursor()
+    # Since deleting parent row can cause a foreign key constraint to fail
+    try:
+        # Execute SQL Query
+        cur.execute("DELETE FROM members WHERE id=%s", [id])
+
+        # Commit to DB
+        mysql.connection.commit()
+    except (MySQLdb.Error, MySQLdb.Warning) as e:
+        print(e)
+        # Flash Failure Message
+        flash("Member could not be deleted", "danger")
+        flash(str(e), "danger")
+
+        # Redirect to show all members
+        return redirect(url_for('members'))
+    finally:
+        # Close DB Connection
+        cur.close()
+
+    # Flash Success Message
+    flash("Member Deleted", "success")
+
+    # Redirect to show all members
+    return redirect(url_for('members'))
+
+
+# Books
+@app.route('/books')
+def books():
+    # Create MySQLCursor
+    cur = mysql.connection.cursor()
+
+    # Execute SQL Query
+    result = cur.execute(
+        "SELECT id,title,author,total_quantity,available_quantity,rented_count FROM books")
+    books = cur.fetchall()
+
+    # Render Template
+    if result > 0:
+        return render_template('books.html', books=books)
+    else:
+        msg = 'No Books Found'
+        return render_template('books.html', warning=msg)
+
+    # Close DB Connection
+    cur.close()
+
+
+# View Details of Book by ID
+@app.route('/book/<string:id>')
+def viewBook(id):
+    # Create MySQLCursor
+    cur = mysql.connection.cursor()
+
+    # Execute SQL Query
+    result = cur.execute("SELECT * FROM books WHERE id=%s", [id])
+    book = cur.fetchone()
+
+    # Render Template
+    if result > 0:
+        return render_template('view_book_details.html', book=book)
+    else:
+        msg = 'This Book Does Not Exist'
+        return render_template('view_book_details.html', warning=msg)
+
+    # Close DB Connection
+    cur.close()
+
