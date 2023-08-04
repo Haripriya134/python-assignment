@@ -224,3 +224,81 @@ def viewBook(id):
     # Close DB Connection
     cur.close()
 
+
+# Define Add-Book-Form
+class AddBook(Form):
+    id = StringField('Book ID', [validators.Length(min=1, max=11)])
+    title = StringField('Title', [validators.Length(min=2, max=255)])
+    author = StringField('Author(s)', [validators.Length(min=2, max=255)])
+    average_rating = FloatField(
+        'Average Rating', [validators.NumberRange(min=0, max=5)])
+    isbn = StringField('ISBN', [validators.Length(min=10, max=10)])
+    isbn13 = StringField('ISBN13', [validators.Length(min=13, max=13)])
+    language_code = StringField('Language', [validators.Length(min=1, max=3)])
+    num_pages = IntegerField('No. of Pages', [validators.NumberRange(min=1)])
+    ratings_count = IntegerField(
+        'No. of Ratings', [validators.NumberRange(min=0)])
+    text_reviews_count = IntegerField(
+        'No. of Text Reviews', [validators.NumberRange(min=0)])
+    publication_date = DateField(
+        'Publication Date', [validators.InputRequired()])
+    publisher = StringField('Publisher', [validators.Length(min=2, max=255)])
+    total_quantity = IntegerField(
+        'Total No. of Books', [validators.NumberRange(min=1)])
+
+
+# Add Book
+@app.route('/add_book', methods=['GET', 'POST'])
+def add_book():
+    # Get form data from request
+    form = AddBook(request.form)
+
+    # To handle POST request to route
+    if request.method == 'POST' and form.validate():
+
+        # Create MySQLCursor
+        cur = mysql.connection.cursor()
+
+        # Check if book with same ID already exists
+        result = cur.execute(
+            "SELECT id FROM books WHERE id=%s", [form.id.data])
+        book = cur.fetchone()
+        if(book):
+            error = 'Book with that ID already exists'
+            return render_template('add_book.html', form=form, error=error)
+
+        # Execute SQL Query
+        cur.execute("INSERT INTO books (id,title,author,average_rating,isbn,isbn13,language_code,num_pages,ratings_count,text_reviews_count,publication_date,publisher,total_quantity,available_quantity) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", [
+            form.id.data,
+            form.title.data,
+            form.author.data,
+            form.average_rating.data,
+            form.isbn.data,
+            form.isbn13.data,
+            form.language_code.data,
+            form.num_pages.data,
+            form.ratings_count.data,
+            form.text_reviews_count.data,
+            form.publication_date.data,
+            form.publisher.data,
+            form.total_quantity.data,
+            # When a book is first added, available_quantity = total_quantity
+            form.total_quantity.data
+        ])
+
+        # Commit to DB
+        mysql.connection.commit()
+
+        # Close DB Connection
+        cur.close()
+
+        # Flash Success Message
+        flash("New Book Added", "success")
+
+        # Redirect to show all books
+        return redirect(url_for('books'))
+
+    # To handle GET request to route
+    return render_template('add_book.html', form=form)
+
+
