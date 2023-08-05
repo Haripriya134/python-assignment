@@ -407,3 +407,64 @@ def import_books():
     # To handle GET request to route
     return render_template('import_books.html', form=form)
 
+# Edit Book by ID
+@app.route('/edit_book/<string:id>', methods=['GET', 'POST'])
+def edit_book(id):
+    # Get form data from request
+    form = AddBook(request.form)
+
+    # Create MySQLCursor
+    cur = mysql.connection.cursor()
+
+    # To get existing values of selected book
+    result = cur.execute("SELECT * FROM books WHERE id=%s", [id])
+    book = cur.fetchone()
+
+    # To handle POST request to route
+    if request.method == 'POST' and form.validate():
+        # Check if book with same ID already exists (if ID field is being edited)
+        if(form.id.data != id):
+            result = cur.execute(
+                "SELECT id FROM books WHERE id=%s", [form.id.data])
+            book = cur.fetchone()
+            if(book):
+                error = 'Book with that ID already exists'
+                return render_template('edit_book.html', form=form, error=error, book=form.data)
+
+        # Calculate new available_quantity (No. of books available to be rented)
+        available_quantity = book['available_quantity'] + \
+            (form.total_quantity.data - book['total_quantity'])
+
+        # Execute SQL Query
+        cur.execute("UPDATE books SET id=%s,title=%s,author=%s,average_rating=%s,isbn=%s,isbn13=%s,language_code=%s,num_pages=%s,ratings_count=%s,text_reviews_count=%s,publication_date=%s,publisher=%s,total_quantity=%s,available_quantity=%s WHERE id=%s", [
+            form.id.data,
+            form.title.data,
+            form.author.data,
+            form.average_rating.data,
+            form.isbn.data,
+            form.isbn13.data,
+            form.language_code.data,
+            form.num_pages.data,
+            form.ratings_count.data,
+            form.text_reviews_count.data,
+            form.publication_date.data,
+            form.publisher.data,
+            form.total_quantity.data,
+            available_quantity,
+            id])
+
+        # Commit to DB
+        mysql.connection.commit()
+
+        # Close DB Connection
+        cur.close()
+
+        # Flash Success Message
+        flash("Book Updated", "success")
+
+        # Redirect to show all books
+        return redirect(url_for('books'))
+
+    # To handle GET request to route
+    # To render edit book form
+    return render_template('edit_book.html', form=form, book=book)
