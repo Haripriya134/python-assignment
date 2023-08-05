@@ -301,4 +301,109 @@ def add_book():
     # To handle GET request to route
     return render_template('add_book.html', form=form)
 
+# Define Import-Books-Form
+class ImportBooks(Form):
+    no_of_books = IntegerField('No. of Books*', [validators.NumberRange(min=1)])
+    quantity_per_book = IntegerField(
+        'Quantity Per Book*', [validators.NumberRange(min=1)])
+    title = StringField(
+        'Title', [validators.Optional(), validators.Length(min=2, max=255)])
+    author = StringField(
+        'Author(s)', [validators.Optional(), validators.Length(min=2, max=255)])
+    isbn = StringField(
+        'ISBN', [validators.Optional(), validators.Length(min=10, max=10)])
+    publisher = StringField(
+        'Publisher', [validators.Optional(), validators.Length(min=2, max=255)])
+
+
+# Import Books from Frappe API
+@app.route('/import_books', methods=['GET', 'POST'])
+def import_books():
+    # Get form data from request
+    form = ImportBooks(request.form)
+
+    # To handle POST request to route
+    if request.method == 'POST' and form.validate():
+        # Create request structure
+        url = 'https://frappe.io/api/method/frappe-library?'
+        parameters = {'page': 1}
+        if form.title.data:
+            parameters['title'] = form.title.data
+        if form.author.data:
+            parameters['author'] = form.author.data
+        if form.isbn.data:
+            parameters['isbn'] = form.isbn.data
+        if form.publisher.data:
+            parameters['publisher'] = form.publisher.data
+
+        # Create MySQLCursor
+        cur = mysql.connection.cursor()
+
+        # Loop and make request
+        no_of_books_imported = 0
+        repeated_book_ids = []
+        while(no_of_books_imported != form.no_of_books.data):
+            r = requests.get(url + urllib.parse.urlencode(parameters))
+            res = r.json()
+            # Break if message is empty
+            if not res['message']:
+                break
+
+            for book in res['message']:
+                # Check if book with same ID already exists
+                result = cur.execute(
+                    "SELECT id FROM books WHERE id=%s", [book['bookID']])
+                book_found = cur.fetchone()
+                if(not book_found):
+                    # Execute SQL Query
+                    cur.execute("INSERT INTO books (id,title,author,average_rating,isbn,isbn13,language_code,num_pages,ratings_count,text_reviews_count,publication_date,publisher,total_quantity,available_quantity) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", [
+                        book['bookID'],
+                        book['title'],
+                        book['authors'],
+                        book['average_rating'],
+                        book['isbn'],
+                        book['isbn13'],
+                        book['language_code'],
+                        book['  num_pages'],
+                        book['ratings_count'],
+                        book['text_reviews_count'],
+                        book['publication_date'],
+                        book['publisher'],
+                        form.quantity_per_book.data,
+                        # When a book is first added, available_quantity = total_quantity
+                        form.quantity_per_book.data
+                    ])
+                    no_of_books_imported += 1
+                    if no_of_books_imported == form.no_of_books.data:
+                        break
+                else:
+                    repeated_book_ids.append(book['bookID'])
+            parameters['page'] = parameters['page'] + 1
+
+        # Commit to DB
+        mysql.connection.commit()
+
+        # Close DB Connection
+        cur.close()
+
+        # Flash Success/Warning Message
+        msg = str(no_of_books_imported) + "/" + \
+            str(form.no_of_books.data) + " books have been imported. "
+        msgType = 'success'
+        if no_of_books_imported != form.no_of_books.data:
+            msgType = 'warning'
+            if len(repeated_book_ids) > 0:
+                msg += str(len(repeated_book_ids)) + \
+                    " books were found with already exisiting IDs."
+            else:
+                msg += str(form.no_of_books.data - no_of_books_imported) + \
+                    " matching books were not found."
+
+        flash(msg, msgType)
+
+        # Redirect to show all books
+        return redirect(url_for('books'))
+
+    # To handle GET request to route
+    return render_template('import_books.html', form=form)
 
