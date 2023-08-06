@@ -604,3 +604,78 @@ def issue_book():
 
     # To handle GET request to route
     return render_template('issue_book.html', form=form)
+
+
+# Define Issue-Book-Form
+class ReturnBook(Form):
+    amount_paid = FloatField('Amount Paid', [validators.NumberRange(min=0)])
+
+
+# Return Book by Transaction ID
+@app.route('/return_book/<string:transaction_id>', methods=['GET', 'POST'])
+def return_book(transaction_id):
+    # Get form data from request
+    form = ReturnBook(request.form)
+
+    # Create MySQLCursor
+    cur = mysql.connection.cursor()
+
+    # To get existing values of selected transaction
+    cur.execute("SELECT * FROM transactions WHERE id=%s", [transaction_id])
+    transaction = cur.fetchone()
+
+    # Calculate Total Charge
+    date = datetime.now()
+    difference = date - transaction['borrowed_on']
+    difference = difference.days
+    total_charge = difference * transaction['per_day_fee']
+
+    # To handle POST request to route
+    if request.method == 'POST' and form.validate():
+
+        # Calculate debt for this transaction based on amount_paid
+        transaction_debt = total_charge - form.amount_paid.data
+
+        # Check if outstanding_debt + transaction_debt exceeds Rs.500
+        cur.execute("SELECT outstanding_debt,amount_spent FROM members WHERE id=%s", [
+                    transaction['member_id']])
+        result = cur.fetchone()
+        outstanding_debt = result['outstanding_debt']
+        amount_spent = result['amount_spent']
+        if(outstanding_debt + transaction_debt > 500):
+            error = 'Outstanding Debt Cannot Exceed Rs.500'
+            return render_template('return_book.html', form=form, error=error)
+
+        # Update returned_on, total_charge, amount_paid for this transaction
+        cur.execute("UPDATE transactions SET returned_on=%s,total_charge=%s,amount_paid=%s WHERE id=%s", [
+            date,
+            total_charge,
+            form.amount_paid.data,
+            transaction_id
+        ])
+
+        # Update outstanding_debt and amount_spent for this member
+        cur.execute("UPDATE members SET outstanding_debt=%s, amount_spent=%s WHERE id=%s", [
+            outstanding_debt+transaction_debt,
+            amount_spent+form.amount_paid.data,
+            transaction['member_id']
+        ])
+
+        # Update available_quantity for this book
+        cur.execute(
+            "UPDATE books SET available_quantity=available_quantity+1 WHERE id=%s", [transaction['book_id']])
+
+        # Commit to DB
+        mysql.connection.commit()
+
+        # Close DB Connection
+        cur.close()
+
+        # Flash Success Message
+        flash("Book Returned", "success")
+
+        # Redirect to show all transactions
+        return redirect(url_for('transactions'))
+
+    # To handle GET request to route
+    return render_template('return_book.html', form=form, total_charge=total_charge, difference=difference, transaction=transaction)
