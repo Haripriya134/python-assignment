@@ -679,3 +679,73 @@ def return_book(transaction_id):
 
     # To handle GET request to route
     return render_template('return_book.html', form=form, total_charge=total_charge, difference=difference, transaction=transaction)
+
+# Reports
+@app.route('/reports')
+def reports():
+    # Create MySQLCursor
+    cur = mysql.connection.cursor()
+
+    # Execute SQL Query to get 5 highest paying customers
+    result_members = cur.execute(
+        "SELECT id,name,amount_spent FROM members ORDER BY amount_spent DESC LIMIT 5")
+    members = cur.fetchall()
+
+    # Execute SQL Query to get 5 most popular books
+    result_books = cur.execute(
+        "SELECT id,title,author,total_quantity,available_quantity,rented_count FROM books ORDER BY rented_count DESC LIMIT 5")
+    books = cur.fetchall()
+
+    # Render Template
+    msg = ''
+    if result_members <= 0:
+        msg = 'No Members Found. '
+    if result_books <= 0:
+        msg = msg+'No Books Found'
+    return render_template('reports.html', members=members, books=books, warning=msg)
+
+    # Close DB Connection
+    cur.close()
+
+
+# Define Search-Form
+class SearchBook(Form):
+    title = StringField('Title', [validators.Length(min=2, max=255)])
+    author = StringField('Author(s)', [validators.Length(min=2, max=255)])
+
+
+# Search
+@app.route('/search_book', methods=['GET', 'POST'])
+def search_book():
+    # Get form data from request
+    form = SearchBook(request.form)
+
+    # To handle POST request to route
+    if request.method == 'POST' and form.validate():
+        # Create MySQLCursor
+        cur = mysql.connection.cursor()
+        title = '%'+form.title.data+'%'
+        author = '%'+form.author.data+'%'
+        # Check if book with same ID already exists
+        result = cur.execute(
+            "SELECT * FROM books WHERE title LIKE %s OR author LIKE %s", [title, author])
+        books = cur.fetchall()
+        # Close DB Connection
+        cur.close()
+
+        # Flash Success Message
+        if result <= 0:
+            msg = 'No Results Found'
+            return render_template('search_book.html', form=form, warning=msg)
+
+        flash("Results Found", "success")
+        # Render template with search results
+        return render_template('search_book.html', form=form, books=books)
+
+    # To handle GET request to route
+    return render_template('search_book.html', form=form)
+
+
+if __name__ == '__main__':
+    app.secret_key = "secret"
+    app.run(debug=True)
