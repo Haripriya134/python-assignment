@@ -501,3 +501,39 @@ def delete_book(id):
 
     # Redirect to show all books
     return redirect(url_for('books'))
+
+# Transactions
+@app.route('/transactions')
+def transactions():
+    # Create MySQLCursor
+    cur = mysql.connection.cursor()
+
+    # Execute SQL Query
+    result = cur.execute("SELECT * FROM transactions")
+    transactions = cur.fetchall()
+
+    # To handle empty fields
+    for transaction in transactions:
+        for key, value in transaction.items():
+            if value is None:
+                transaction[key] = "-"
+
+    # Render Template
+    if result > 0:
+        return render_template('transactions.html', transactions=transactions)
+    else:
+        msg = 'No Transactions Found'
+        return render_template('transactions.html', warning=msg)
+
+    # Close DB Connection
+    cur.close()
+
+
+# Define Issue-Book-Form
+class IssueBook(Form):
+    book_id = SelectField('Book ID', choices=[])
+    member_id = SelectField('Member ID', choices=[])
+    per_day_fee = FloatField('Per Day Renting Fee', [
+                             validators.NumberRange(min=1)])
+
+
