@@ -469,7 +469,7 @@ def edit_book(id):
     # To render edit book form
     return render_template('edit_book.html', form=form, book=book)
 
- Delete Book by ID
+ #Delete Book by ID
 # Using POST instead of DELETE because HTML form can only send GET and POST requests
 @app.route('/delete_book/<string:id>', methods=['POST'])
 def delete_book(id):
