@@ -91,7 +91,7 @@ def add_member():
 
         # Execute SQL Query
         cur.execute(
-            "INSERT INTO members (name, email) VALUES (%s, %s)", (name, email))
+            "INSERT INTO members (name, email,outstanding_debt, amount_spent) VALUES (%s, %s)", (name, email,0,0))
 
         # Commit to DB
         mysql.connection.commit()
@@ -268,7 +268,7 @@ def add_book():
             return render_template('add_book.html', form=form, error=error)
 
         # Execute SQL Query
-        cur.execute("INSERT INTO books (id,title,author,average_rating,isbn,isbn13,language_code,num_pages,ratings_count,text_reviews_count,publication_date,publisher,total_quantity,available_quantity) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", [
+        cur.execute("INSERT INTO books (id,title,author,average_rating,isbn,isbn13,language_code,num_pages,ratings_count,text_reviews_count,publication_date,publisher,total_quantity,available_quantity,rented_count) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", [
             form.id.data,
             form.title.data,
             form.author.data,
