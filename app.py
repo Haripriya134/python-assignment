@@ -283,7 +283,8 @@ def add_book():
             form.publisher.data,
             form.total_quantity.data,
             # When a book is first added, available_quantity = total_quantity
-            form.total_quantity.data
+            form.total_quantity.data,
+            0
         ])
 
         # Commit to DB
