@@ -55,11 +55,9 @@ To sum it up, our library management system, developed using Flask and MySQL, en
 
 ## *Screenshots:*
 
-![1](https://user-images.githubusercontent.com/49085834/121894715-142b1900-cd3d-11eb-8e69-9b75cb96a6fe.png)
-![2](https://user-images.githubusercontent.com/49085834/121894744-1db48100-cd3d-11eb-8025-470a3bf281a8.png)
-![3](https://user-images.githubusercontent.com/49085834/121894765-23aa6200-cd3d-11eb-9424-6f0ce711c222.png)
-![4](https://user-images.githubusercontent.com/49085834/121894850-3f156d00-cd3d-11eb-8c5d-f2206aab7e0a.png)
-![10 6](https://user-images.githubusercontent.com/49085834/121895080-7a17a080-cd3d-11eb-899e-f2b55e6c5b1e.png)
-![10 4](https://user-images.githubusercontent.com/49085834/121895357-c06cff80-cd3d-11eb-99f6-25a86a85dcea.png)
-![Search](https://user-images.githubusercontent.com/49085834/121896734-40479980-cd3f-11eb-8e78-570c25801596.png)
-![Report](https://user-images.githubusercontent.com/49085834/121896485-f8c10d80-cd3e-11eb-9ef9-c06db4ea6980.png)
+![1](https://github.com/Haripriya134/python-assignment/blob/e8d7a70b99aaf92598d3c28fb6820b4587e1ebb7/screenshot/Screenshot%202023-08-10%20142454.png)
+![2](https://github.com/Haripriya134/python-assignment/blob/e8d7a70b99aaf92598d3c28fb6820b4587e1ebb7/screenshot/Screenshot%202023-08-10%20142438.png)
+![3](https://github.com/Haripriya134/python-assignment/blob/e8d7a70b99aaf92598d3c28fb6820b4587e1ebb7/screenshot/Screenshot%202023-08-10%20142409.png)
+![4](https://github.com/Haripriya134/python-assignment/blob/e8d7a70b99aaf92598d3c28fb6820b4587e1ebb7/screenshot/Screenshot%202023-08-10%20142358.png)
+![10 6](https://github.com/Haripriya134/python-assignment/blob/e8d7a70b99aaf92598d3c28fb6820b4587e1ebb7/screenshot/Screenshot%202023-08-10%20142349.png)
+![10 4](https://github.com/Haripriya134/python-assignment/blob/e8d7a70b99aaf92598d3c28fb6820b4587e1ebb7/screenshot/Screenshot%202023-08-10%20142328.png)
